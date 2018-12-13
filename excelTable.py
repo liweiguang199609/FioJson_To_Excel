@@ -18,33 +18,30 @@ class excelTable(object):
         al.vert = 0x01  # 设置垂直居中
         self.style.alignment = al
         self.workbook.save(excelFileName)
-        self.numjobs = 0
-        self.depths = 0
-        self.bss = 0
-        self.iops = 0
 
-    def setFrame(self, horizontal, vertical, para):
-        for key in para:
-            exec("self." + key + " = " + str(para[key]))
-        numjob_length = len(self.numjobs)
-        depth_length = len(self.depths)
-        bs_length = len(self.bss)
+    def setFrame(self, numjobs, depths, bss):
+        self.numjobs = numjobs
+        self.depths = depths
+        self.bss = bss
+        numjob_length = len(numjobs)
+        depth_length = len(depths)
+        bs_length = len(bss)
         rws = ('read','write')
         for rw_index in range(len(rws)):
             rw_position = {'x': rw_index * numjob_length * ( 2 + bs_length ) + 1, 'y': 0} # x towords down ; y towords the right
             self.worksheet.write_merge(rw_position['x'], rw_position['x'] + numjob_length * ( 2 + bs_length ) - 1, rw_position['y'],rw_position['y'], rws[rw_index], self.style)
-            for numjob_index in range(len(self.numjobs)):
+            for numjob_index in range(len(numjobs)):
                 numjobs_position = {'x': rw_position['x'] + numjob_index * ( 2 + bs_length ), 'y': rw_position['y'] + 1}
                 depths_position = {'x': numjobs_position['x'], 'y': numjobs_position['y'] + 4}
                 bss_position = {'x': numjobs_position['x'] + 2, 'y': numjobs_position['y'] + 2}
-                self.worksheet.write_merge(numjobs_position['x'],numjobs_position['x'] + bs_length + 1,numjobs_position['y'],numjobs_position['y'],"numjobs=" + str(self.numjobs[numjob_index]), self.style)
+                self.worksheet.write_merge(numjobs_position['x'],numjobs_position['x'] + bs_length + 1,numjobs_position['y'],numjobs_position['y'],"numjobs=" + str(numjobs[numjob_index]), self.style)
                 self.worksheet.write_merge(depths_position['x'],depths_position['x'],depths_position['y'],depths_position['y'] + depth_length - 1,"depths", self.style)
                 self.worksheet.write_merge(bss_position['x'],bss_position['x'] + bs_length - 1,bss_position['y'],bss_position['y'],"bs", self.style)
 
-                for i in range(len(self.depths)):
-                    self.worksheet.write(depths_position['x'] + 1, depths_position['y'] + i, self.depths[i], self.style)
-                for i in range(len(self.bss)):
-                    self.worksheet.write(bss_position['x'] + i, bss_position['y'] + 1, self.bss[i], self.style)
+                for i in range(len(depths)):
+                    self.worksheet.write(depths_position['x'] + 1, depths_position['y'] + i, depths[i], self.style)
+                for i in range(len(bss)):
+                    self.worksheet.write(bss_position['x'] + i, bss_position['y'] + 1, bss[i], self.style)
         self.workbook.save(self.excelFileName)
 
     def getPositionFromJson(self, json):
@@ -107,8 +104,8 @@ if __name__ == '__main__':
     data = fileData('r_1024_4_32_1')
     bw = data.getReadBw()
     a = excelTable("2.xls")
-    para = {'numjobs':(1, 2, 4),
-            'depths':(1, 32, 64),
-            'bss':(4, 1024, 2048)}
-    a.setFrame(para)
-    a.setValue(a.getPositionFromJson({'rw':0, 'numjob': 4, 'depth': 32, 'bs': 1024}), bw)
+    numjobs = (1, 2, 4)
+    depths = (1, 32, 64)
+    bss = (4, 1024, 2048)
+    a.setFrame(numjobs, depths, bss)
+    a.setValue(a.getPositionFromJson({'numjob': 4, 'depth': 32, 'bs': 1024}), bw)
