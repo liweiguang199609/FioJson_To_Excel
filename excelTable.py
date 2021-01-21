@@ -10,6 +10,8 @@ class excelTable(object):
         if os.path.exists(excelFileName):
             os.remove(excelFileName)
         self.excelFileName = excelFileName
+        self.rws = {'read':0, 'write':1, 'randread':2, 'randwrite':3}
+        self.rws_array = ['read', 'write', 'randread', 'randwrite']
         self.workbook = xlwt.Workbook(encoding='utf8')
         self.worksheet = self.workbook.add_sheet(u'sheet1')
         self.style = xlwt.XFStyle()  # 创建一个样式对象，初始化样式
@@ -26,10 +28,9 @@ class excelTable(object):
         numjob_length = len(numjobs)
         depth_length = len(depths)
         bs_length = len(bss)
-        rws = ('read','write')
-        for rw_index in range(len(rws)):
+        for rw_index in range(len(self.rws_array)):
             rw_position = {'x': rw_index * numjob_length * ( 2 + bs_length ) + 1, 'y': 0} # x towords down ; y towords the right
-            self.worksheet.write_merge(rw_position['x'], rw_position['x'] + numjob_length * ( 2 + bs_length ) - 1, rw_position['y'],rw_position['y'], rws[rw_index], self.style)
+            self.worksheet.write_merge(rw_position['x'], rw_position['x'] + numjob_length * ( 2 + bs_length ) - 1, rw_position['y'],rw_position['y'], self.rws_array[rw_index], self.style)
             for numjob_index in range(len(numjobs)):
                 numjobs_position = {'x': rw_position['x'] + numjob_index * ( 2 + bs_length ), 'y': rw_position['y'] + 1}
                 depths_position = {'x': numjobs_position['x'], 'y': numjobs_position['y'] + 4}
@@ -45,7 +46,7 @@ class excelTable(object):
         self.workbook.save(self.excelFileName)
 
     def getPositionFromJson(self, json):
-        rw = json['rw'] # 0 is read; 1 is write
+        rw = json['rw']
         numjob = json['numjob']
         depth = json['depth']
         bs = json['bs']
@@ -64,7 +65,7 @@ class excelTable(object):
         numjob_length = len(self.numjobs)
         depth_length = len(self.depths)
         bs_length = len(self.bss)
-        rw_position = {'x': rw * numjob_length * (2 + bs_length) + 1, 'y': 0}
+        rw_position = {'x': self.rws[rw] * numjob_length * (2 + bs_length) + 1, 'y': 0}
         numjob_position = {'x': rw_position['x'] + numjob_index * (2 + bs_length), 'y': rw_position['y'] + 1}
         depth_position = {'x': numjob_position['x'], 'y': numjob_position['y'] + 4}
         bs_position = {'x': numjob_position['x'] + 2, 'y': numjob_position['y'] + 2}
@@ -101,7 +102,7 @@ class excelTable(object):
         a.setValue(a.getPositionFromJson({'numjob': 4, 'depth': 32, 'bs': 4}), 'lwg')
 
 if __name__ == '__main__':
-    data = fileData('r_1024_4_32_1')
+    data = fileData('fio-latency-core/randread_4_1_4_1')
     bw = data.getReadBw()
     a = excelTable("2.xls")
     numjobs = (1, 2, 4)
